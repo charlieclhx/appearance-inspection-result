@@ -1,0 +1,1887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>外观检查不良管理系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  
+  <!-- Tailwind CSS 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            danger: '#F53F3F',
+            warning: '#FF7D00',
+            success: '#00B42A',
+            info: '#86909C',
+            light: '#F2F3F5',
+            dark: '#1D2129'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .table-shadow {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      .transition-all-300 {
+        transition: all 300ms ease-in-out;
+      }
+    }
+  </style>
+</head>
+
+<body class="font-inter bg-gray-50 text-dark">
+  <!-- 顶部导航栏 -->
+  <header class="bg-white shadow-sm fixed w-full top-0 z-50 transition-all duration-300">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-search-plus text-primary text-2xl"></i>
+        <h1 class="text-xl font-bold text-primary">外观检查不良管理系统</h1>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        <button id="printBtn" class="flex items-center space-x-1 bg-white border border-gray-300 rounded px-3 py-1.5 text-sm hover:bg-gray-50 transition-all-300">
+          <i class="fa fa-print text-info"></i>
+          <span>打印</span>
+        </button>
+        <button id="importBtn" class="flex items-center space-x-1 bg-white border border-gray-300 rounded px-3 py-1.5 text-sm hover:bg-gray-50 transition-all-300">
+          <i class="fa fa-upload text-info"></i>
+          <span>导入</span>
+        </button>
+        <button id="exportBtn" class="flex items-center space-x-1 bg-white border border-gray-300 rounded px-3 py-1.5 text-sm hover:bg-gray-50 transition-all-300">
+          <i class="fa fa-download text-info"></i>
+          <span>导出</span>
+        </button>
+        <button id="addNewBtn" class="flex items-center space-x-1 bg-primary text-white rounded px-3 py-1.5 text-sm hover:bg-primary/90 transition-all-300">
+          <i class="fa fa-plus"></i>
+          <span>新增记录</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主要内容区 -->
+  <main class="container mx-auto px-4 pt-20 pb-16">
+    <!-- 筛选区域 -->
+    <section class="bg-white rounded-lg shadow-sm p-4 mb-6">
+      <h2 class="text-lg font-semibold mb-4 flex items-center">
+        <i class="fa fa-filter text-primary mr-2"></i>筛选条件
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">客户名称</label>
+          <select id="customerFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            <option value="">全部客户</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">时间段</label>
+          <div class="flex space-x-2">
+            <input type="date" id="startDateFilter" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            <input type="date" id="endDateFilter" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Part Number</label>
+          <input type="text" id="partNumberFilter" placeholder="输入Part Number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">产品别</label>
+          <select id="productCategoryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            <option value="">全部产品别</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">不良组别</label>
+          <select id="defectGroupFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            <option value="">全部不良组别</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">不良项目</label>
+          <select id="defectFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            <option value="">全部不良项目</option>
+            <option value="伤胶壳">伤胶壳</option>
+            <option value="缺胶">缺胶</option>
+            <option value="露芯线">露芯线</option>
+            <option value="伤线">伤线</option>
+            <option value="短端子">短端子</option>
+            <option value="混胶">混胶</option>
+            <option value="变形">变形</option>
+            <option value="露胶壳">露胶壳</option>
+            <option value="缩水">缩水</option>
+            <option value="烧焦">烧焦</option>
+            <option value="露外皮">露外皮</option>
+            <option value="进胶">进胶</option>
+            <option value="歪端子">歪端子</option>
+            <option value="碰伤">碰伤</option>
+            <option value="破皮">破皮</option>
+            <option value="露铜丝">露铜丝</option>
+            <option value="水纹">水纹</option>
+            <option value="毛边">毛边</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="flex justify-end mt-4 space-x-2">
+        <button id="resetFilterBtn" class="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition-all-300">
+          重置
+        </button>
+        <button id="applyFilterBtn" class="px-4 py-2 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-all-300">
+          应用筛选
+        </button>
+      </div>
+    </section>
+    
+    <!-- 数据统计和柏拉图分析 -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div class="lg:col-span-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-primary">
+          <p class="text-sm text-gray-500">总记录数</p>
+          <p id="totalRecords" class="text-2xl font-bold mt-1">0</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-warning">
+          <p class="text-sm text-gray-500">总不良数</p>
+          <p id="totalDefects" class="text-2xl font-bold mt-1">0</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-success">
+          <p class="text-sm text-gray-500">总订单量</p>
+          <p id="totalOrders" class="text-2xl font-bold mt-1">0</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-danger">
+          <p class="text-sm text-gray-500">平均PPM (目标: 8000)</p>
+          <p id="averagePpm" class="text-2xl font-bold mt-1">0</p>
+        </div>
+      </div>
+      
+      <div class="lg:col-span-2 bg-white rounded-lg shadow-sm p-4">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold flex items-center">
+            <i class="fa fa-bar-chart text-primary mr-2"></i>不良分析
+          </h2>
+          <div class="flex space-x-2">
+            <select id="analysisDimension" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm">
+              <option value="defect">按不良项目</option>
+              <option value="product">按产品别</option>
+              <option value="customer">按客户别</option>
+            </select>
+            <select id="chartType" class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm">
+              <option value="bar">柱状图</option>
+              <option value="pie">饼图</option>
+              <option value="line">折线图</option>
+            </select>
+          </div>
+        </div>
+        <div class="h-64">
+          <canvas id="analysisChart"></canvas>
+        </div>
+      </div>
+    </section>
+    
+    <!-- 数据表格区域 -->
+    <section class="bg-white rounded-lg shadow-sm overflow-hidden">
+      <div class="p-4 border-b flex justify-between items-center">
+        <h2 class="text-lg font-semibold flex items-center">
+          <i class="fa fa-table text-primary mr-2"></i>检查记录列表
+        </h2>
+        <div class="flex items-center space-x-3">
+          <div class="text-sm bg-blue-50 text-primary px-3 py-1 rounded-full">
+            目标PPM: 8000
+          </div>
+          <button id="deleteAllBtn" class="flex items-center space-x-1 text-danger text-sm px-3 py-1.5 rounded border border-danger hover:bg-danger/5 transition-all-300">
+            <i class="fa fa-trash"></i>
+            <span>一键删除所有</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- 表格容器 -->
+      <div class="overflow-x-auto scrollbar-hide">
+        <table class="min-w-full table-shadow">
+          <thead>
+            <tr class="bg-gray-50 text-left">
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">序号</th>
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">订单号</th>
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">客户名称</th>
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">产品名称</th>
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Part Number</th>
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">产品别</th>
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">不良组别</th>
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">订单数量</th>
+              
+              <!-- 不良项目列 -->
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">伤胶壳</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">缺胶</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">露芯线</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">伤线</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">短端子</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">混胶</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">变形</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">露胶壳</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">缩水</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">烧焦</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">露外皮</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">进胶</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">歪端子</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">碰伤</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">破皮</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">露铜丝</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">水纹</th>
+              <th class="px-3 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">毛边</th>
+              
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">当天不良PPM</th>
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">目标PPM</th>
+              <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+            </tr>
+          </thead>
+          <tbody id="recordsTableBody" class="divide-y divide-gray-200">
+            <!-- 表格内容将通过JavaScript动态生成 -->
+            <tr>
+              <td colspan="32" class="px-4 py-8 text-center text-gray-500">
+                <div class="flex flex-col items-center">
+                  <i class="fa fa-file-text-o text-4xl mb-2 text-gray-300"></i>
+                  <p>暂无记录数据</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- 分页控制 -->
+      <div class="px-4 py-3 flex items-center justify-between border-t">
+        <div class="flex-1 flex justify-between sm:hidden">
+          <button id="prevPageBtn" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            上一页
+          </button>
+          <button id="nextPageBtn" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            下一页
+          </button>
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+          <div>
+            <p class="text-sm text-gray-700">
+              显示第 <span id="currentPageRange">1</span> 至 <span id="lastPageRange">0</span> 条，共 <span id="totalItems">0</span> 条记录
+            </p>
+          </div>
+          <div>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+              <button id="firstPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">第一页</span>
+                <i class="fa fa-angle-double-left"></i>
+              </button>
+              <button id="prevPageBtnSm" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">上一页</span>
+                <i class="fa fa-angle-left"></i>
+              </button>
+              <span id="pageNumbers" class="flex">
+                <!-- 页码将通过JavaScript动态生成 -->
+              </span>
+              <button id="nextPageBtnSm" class="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">下一页</span>
+                <i class="fa fa-angle-right"></i>
+              </button>
+              <button id="lastPageBtn" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                <span class="sr-only">最后一页</span>
+                <i class="fa fa-angle-double-right"></i>
+              </button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <!-- 新增/编辑记录模态框 -->
+  <div id="recordModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div class="px-6 py-4 border-b flex justify-between items-center">
+        <h3 id="modalTitle" class="text-lg font-semibold">新增记录</h3>
+        <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="p-6">
+        <form id="recordForm">
+          <input type="hidden" id="recordId">
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label for="date" class="block text-sm font-medium text-gray-700 mb-1">日期 <span class="text-danger">*</span></label>
+              <input type="date" id="date" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="orderNumber" class="block text-sm font-medium text-gray-700 mb-1">订单号 <span class="text-danger">*</span></label>
+              <input type="text" id="orderNumber" required placeholder="输入订单号" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">客户名称 <span class="text-danger">*</span></label>
+              <input type="text" id="customerName" required placeholder="输入客户名称" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">产品名称 <span class="text-danger">*</span></label>
+              <input type="text" id="productName" required placeholder="输入产品名称" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="partNumber" class="block text-sm font-medium text-gray-700 mb-1">Part Number <span class="text-danger">*</span></label>
+              <input type="text" id="partNumber" required placeholder="输入Part Number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="productCategory" class="block text-sm font-medium text-gray-700 mb-1">产品别 <span class="text-danger">*</span></label>
+              <input type="text" id="productCategory" required placeholder="输入产品别" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="defectGroup" class="block text-sm font-medium text-gray-700 mb-1">不良组别 <span class="text-danger">*</span></label>
+              <input type="text" id="defectGroup" required placeholder="输入不良组别" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="orderQuantity" class="block text-sm font-medium text-gray-700 mb-1">订单数量 <span class="text-danger">*</span></label>
+              <input type="number" id="orderQuantity" required min="1" placeholder="输入订单数量" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+          </div>
+          
+          <h4 class="text-base font-medium text-gray-700 mb-4">不良项目数量</h4>
+          
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-6">
+            <div>
+              <label for="damageRubberShell" class="block text-sm font-medium text-gray-700 mb-1">伤胶壳</label>
+              <input type="number" id="damageRubberShell" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="lackRubber" class="block text-sm font-medium text-gray-700 mb-1">缺胶</label>
+              <input type="number" id="lackRubber" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="exposedCoreWire" class="block text-sm font-medium text-gray-700 mb-1">露芯线</label>
+              <input type="number" id="exposedCoreWire" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="damagedWire" class="block text-sm font-medium text-gray-700 mb-1">伤线</label>
+              <input type="number" id="damagedWire" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="shortTerminal" class="block text-sm font-medium text-gray-700 mb-1">短端子</label>
+              <input type="number" id="shortTerminal" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="mixedRubber" class="block text-sm font-medium text-gray-700 mb-1">混胶</label>
+              <input type="number" id="mixedRubber" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="deformation" class="block text-sm font-medium text-gray-700 mb-1">变形</label>
+              <input type="number" id="deformation" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="exposedRubberShell" class="block text-sm font-medium text-gray-700 mb-1">露胶壳</label>
+              <input type="number" id="exposedRubberShell" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="shrinkage" class="block text-sm font-medium text-gray-700 mb-1">缩水</label>
+              <input type="number" id="shrinkage" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="burned" class="block text-sm font-medium text-gray-700 mb-1">烧焦</label>
+              <input type="number" id="burned" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="exposedOuterSkin" class="block text-sm font-medium text-gray-700 mb-1">露外皮</label>
+              <input type="number" id="exposedOuterSkin" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="rubberInflow" class="block text-sm font-medium text-gray-700 mb-1">进胶</label>
+              <input type="number" id="rubberInflow" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="crookedTerminal" class="block text-sm font-medium text-gray-700 mb-1">歪端子</label>
+              <input type="number" id="crookedTerminal" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="bruise" class="block text-sm font-medium text-gray-700 mb-1">碰伤</label>
+              <input type="number" id="bruise" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="brokenSkin" class="block text-sm font-medium text-gray-700 mb-1">破皮</label>
+              <input type="number" id="brokenSkin" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="exposedCopperWire" class="block text-sm font-medium text-gray-700 mb-1">露铜丝</label>
+              <input type="number" id="exposedCopperWire" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="waterMark" class="block text-sm font-medium text-gray-700 mb-1">水纹</label>
+              <input type="number" id="waterMark" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+            
+            <div>
+              <label for="burr" class="block text-sm font-medium text-gray-700 mb-1">毛边</label>
+              <input type="number" id="burr" min="0" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+            </div>
+          </div>
+          
+          <div class="bg-blue-50 p-3 rounded-md mb-6">
+            <p class="text-sm text-primary"><i class="fa fa-info-circle mr-1"></i> 注：所有产品的不良PPM目标值均为8000</p>
+          </div>
+          
+          <div class="flex justify-end space-x-3">
+            <button type="button" id="cancelFormBtn" class="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition-all-300">
+              取消
+            </button>
+            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-all-300">
+              保存
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 查看记录模态框 -->
+  <div id="viewRecordModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div class="px-6 py-4 border-b flex justify-between items-center">
+        <h3 class="text-lg font-semibold">查看记录</h3>
+        <button id="closeViewModalBtn" class="text-gray-500 hover:text-gray-700">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="p-6" id="viewRecordContent">
+        <!-- 内容将通过JavaScript动态生成 -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- 确认删除模态框 -->
+  <div id="confirmDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <div class="text-center mb-4">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-danger/10 text-danger mb-4">
+          <i class="fa fa-exclamation-triangle text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">确认删除</h3>
+        <p class="text-gray-500" id="deleteConfirmMessage">您确定要删除这条记录吗？此操作无法撤销。</p>
+      </div>
+      
+      <div class="flex justify-center space-x-3">
+        <button id="cancelDeleteBtn" class="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition-all-300">
+          取消
+        </button>
+        <button id="confirmDeleteBtn" class="px-4 py-2 bg-danger text-white rounded-md text-sm hover:bg-danger/90 transition-all-300">
+          确认删除
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 通知提示框 -->
+  <div id="notification" class="fixed bottom-4 right-4 bg-white shadow-lg rounded-lg p-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50 max-w-sm">
+    <div class="flex items-start">
+      <div id="notificationIcon" class="mr-3 mt-0.5 text-success">
+        <i class="fa fa-check-circle text-xl"></i>
+      </div>
+      <div>
+        <h4 id="notificationTitle" class="font-medium text-gray-900">操作成功</h4>
+        <p id="notificationMessage" class="text-sm text-gray-500 mt-1">您的操作已成功完成。</p>
+      </div>
+      <button id="closeNotificationBtn" class="ml-auto text-gray-400 hover:text-gray-500">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+  </div>
+  
+  <!-- 导入文件输入 -->
+  <input type="file" id="importFileInput" accept=".json" class="hidden">
+  
+  <script>
+    // 不良项目列表
+    const defectItems = [
+      { id: 'damageRubberShell', name: '伤胶壳' },
+      { id: 'lackRubber', name: '缺胶' },
+      { id: 'exposedCoreWire', name: '露芯线' },
+      { id: 'damagedWire', name: '伤线' },
+      { id: 'shortTerminal', name: '短端子' },
+      { id: 'mixedRubber', name: '混胶' },
+      { id: 'deformation', name: '变形' },
+      { id: 'exposedRubberShell', name: '露胶壳' },
+      { id: 'shrinkage', name: '缩水' },
+      { id: 'burned', name: '烧焦' },
+      { id: 'exposedOuterSkin', name: '露外皮' },
+      { id: 'rubberInflow', name: '进胶' },
+      { id: 'crookedTerminal', name: '歪端子' },
+      { id: 'bruise', name: '碰伤' },
+      { id: 'brokenSkin', name: '破皮' },
+      { id: 'exposedCopperWire', name: '露铜丝' },
+      { id: 'waterMark', name: '水纹' },
+      { id: 'burr', name: '毛边' }
+    ];
+    
+    // 固定目标PPM值
+    const TARGET_PPM = 8000;
+    
+    // 数据管理
+    let records = [];
+    let filteredRecords = [];
+    let currentPage = 1;
+    let recordsPerPage = 10;
+    let selectedRecordId = null;
+    let analysisChart = null;
+    
+    // DOM 元素
+    const recordsTableBody = document.getElementById('recordsTableBody');
+    const totalRecordsEl = document.getElementById('totalRecords');
+    const totalDefectsEl = document.getElementById('totalDefects');
+    const totalOrdersEl = document.getElementById('totalOrders');
+    const averagePpmEl = document.getElementById('averagePpm');
+    const currentPageRangeEl = document.getElementById('currentPageRange');
+    const lastPageRangeEl = document.getElementById('lastPageRange');
+    const totalItemsEl = document.getElementById('totalItems');
+    const pageNumbersEl = document.getElementById('pageNumbers');
+    const customerFilterEl = document.getElementById('customerFilter');
+    const partNumberFilterEl = document.getElementById('partNumberFilter');
+    const productCategoryFilterEl = document.getElementById('productCategoryFilter');
+    const defectGroupFilterEl = document.getElementById('defectGroupFilter');
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      // 从本地存储加载数据
+      loadRecords();
+      
+      // 初始化分析图表
+      initAnalysisChart();
+      
+      // 添加事件监听器
+      addEventListeners();
+    });
+    
+    // 从本地存储加载数据
+    function loadRecords() {
+      const savedRecords = localStorage.getItem('defectRecords');
+      if (savedRecords) {
+        records = JSON.parse(savedRecords);
+      } else {
+        // 添加一些示例数据
+        records = [
+          {
+            id: generateId(),
+            date: '2023-06-01',
+            orderNumber: 'ORD-2023-001',
+            customerName: 'ABC电子',
+            productName: '电源线',
+            partNumber: 'PN-1001',
+            productCategory: '线材类',
+            defectGroup: '外观不良',
+            orderQuantity: 5000,
+            damageRubberShell: 5,
+            lackRubber: 2,
+            exposedCoreWire: 0,
+            damagedWire: 1,
+            shortTerminal: 0,
+            mixedRubber: 3,
+            deformation: 0,
+            exposedRubberShell: 0,
+            shrinkage: 2,
+            burned: 0,
+            exposedOuterSkin: 0,
+            rubberInflow: 1,
+            crookedTerminal: 4,
+            bruise: 0,
+            brokenSkin: 0,
+            exposedCopperWire: 0,
+            waterMark: 2,
+            burr: 5
+          },
+          {
+            id: generateId(),
+            date: '2023-06-01',
+            orderNumber: 'ORD-2023-002',
+            customerName: 'XYZ科技',
+            productName: '数据线',
+            partNumber: 'PN-2002',
+            productCategory: '线材类',
+            defectGroup: '尺寸不良',
+            orderQuantity: 10000,
+            damageRubberShell: 8,
+            lackRubber: 5,
+            exposedCoreWire: 2,
+            damagedWire: 3,
+            shortTerminal: 1,
+            mixedRubber: 0,
+            deformation: 4,
+            exposedRubberShell: 0,
+            shrinkage: 0,
+            burned: 1,
+            exposedOuterSkin: 2,
+            rubberInflow: 0,
+            crookedTerminal: 3,
+            bruise: 5,
+            brokenSkin: 2,
+            exposedCopperWire: 1,
+            waterMark: 0,
+            burr: 3
+          },
+          {
+            id: generateId(),
+            date: '2023-06-02',
+            orderNumber: 'ORD-2023-003',
+            customerName: 'ABC电子',
+            productName: '电源线',
+            partNumber: 'PN-1001',
+            productCategory: '线材类',
+            defectGroup: '外观不良',
+            orderQuantity: 8000,
+            damageRubberShell: 10,
+            lackRubber: 5,
+            exposedCoreWire: 2,
+            damagedWire: 3,
+            shortTerminal: 0,
+            mixedRubber: 1,
+            deformation: 2,
+            exposedRubberShell: 0,
+            shrinkage: 3,
+            burned: 0,
+            exposedOuterSkin: 0,
+            rubberInflow: 2,
+            crookedTerminal: 5,
+            bruise: 0,
+            brokenSkin: 0,
+            exposedCopperWire: 0,
+            waterMark: 1,
+            burr: 4
+          },
+          {
+            id: generateId(),
+            date: '2023-06-03',
+            orderNumber: 'ORD-2023-004',
+            customerName: 'LMN工业',
+            productName: '连接器',
+            partNumber: 'PN-3003',
+            productCategory: '连接器类',
+            defectGroup: '功能不良',
+            orderQuantity: 15000,
+            damageRubberShell: 0,
+            lackRubber: 0,
+            exposedCoreWire: 0,
+            damagedWire: 0,
+            shortTerminal: 12,
+            mixedRubber: 0,
+            deformation: 8,
+            exposedRubberShell: 0,
+            shrinkage: 0,
+            burned: 3,
+            exposedOuterSkin: 0,
+            rubberInflow: 0,
+            crookedTerminal: 15,
+            bruise: 0,
+            brokenSkin: 0,
+            exposedCopperWire: 0,
+            waterMark: 0,
+            burr: 0
+          }
+        ];
+        saveRecords();
+      }
+      
+      // 应用筛选器（初始显示所有记录）
+      applyFilters();
+    }
+    
+    // 保存数据到本地存储
+    function saveRecords() {
+      localStorage.setItem('defectRecords', JSON.stringify(records));
+    }
+    
+    // 生成唯一ID
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
+    
+    // 计算PPM值
+    function calculatePpm(defectCount, orderQuantity) {
+      if (orderQuantity === 0) return 0;
+      return Math.round((defectCount / orderQuantity) * 1000000);
+    }
+    
+    // 计算总不良数
+    function calculateTotalDefects(record) {
+      let total = 0;
+      defectItems.forEach(item => {
+        total += record[item.id] || 0;
+      });
+      return total;
+    }
+    
+    // 计算当天的总不良PPM
+    function calculateDailyPpm(record) {
+      const totalDefects = calculateTotalDefects(record);
+      return calculatePpm(totalDefects, record.orderQuantity);
+    }
+    
+    // 渲染表格数据
+    function renderTable() {
+      // 清空表格
+      recordsTableBody.innerHTML = '';
+      
+      // 如果没有记录
+      if (filteredRecords.length === 0) {
+        recordsTableBody.innerHTML = `
+          <tr>
+            <td colspan="32" class="px-4 py-8 text-center text-gray-500">
+              <div class="flex flex-col items-center">
+                <i class="fa fa-file-text-o text-4xl mb-2 text-gray-300"></i>
+                <p>没有找到匹配的记录</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        updatePagination();
+        updateStatistics();
+        updateAnalysisChart();
+        return;
+      }
+      
+      // 计算当前页显示的记录
+      const startIndex = (currentPage - 1) * recordsPerPage;
+      const endIndex = Math.min(startIndex + recordsPerPage, filteredRecords.length);
+      const currentRecords = filteredRecords.slice(startIndex, endIndex);
+      
+      // 添加记录到表格
+      currentRecords.forEach((record, index) => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50 transition-all-300';
+        
+        // 计算总不良数和PPM
+        const totalDefects = calculateTotalDefects(record);
+        const dailyPpm = calculateDailyPpm(record);
+        const isOverTarget = dailyPpm > TARGET_PPM;
+        
+        // 构建表格行内容
+        row.innerHTML = `
+          <td class="px-4 py-3 whitespace-nowrap">${startIndex + index + 1}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${formatDate(record.date)}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${record.orderNumber}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${record.customerName}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${record.productName}</td>
+          <td class="px-4 py-3 whitespace-nowrap font-medium">${record.partNumber}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${record.productCategory}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${record.defectGroup}</td>
+          <td class="px-4 py-3 whitespace-nowrap">${record.orderQuantity}</td>
+          
+          ${defectItems.map(item => `
+            <td class="px-3 py-3 whitespace-nowrap ${record[item.id] > 0 ? 'text-danger font-medium' : ''}">
+              ${record[item.id] || 0}
+            </td>
+          `).join('')}
+          
+          <td class="px-4 py-3 whitespace-nowrap ${isOverTarget ? 'text-danger font-bold' : dailyPpm > 0 ? 'text-warning font-medium' : ''}">
+            ${dailyPpm}
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap font-medium text-primary">
+            ${TARGET_PPM}
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap">
+            <div class="flex space-x-1">
+              <button class="view-btn text-primary hover:text-primary/80" data-id="${record.id}" title="查看">
+                <i class="fa fa-eye"></i>
+              </button>
+              <button class="edit-btn text-warning hover:text-warning/80" data-id="${record.id}" title="编辑">
+                <i class="fa fa-pencil"></i>
+              </button>
+              <button class="delete-btn text-danger hover:text-danger/80" data-id="${record.id}" title="删除">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        
+        recordsTableBody.appendChild(row);
+      });
+      
+      // 添加事件监听器到按钮
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => viewRecord(btn.dataset.id));
+      });
+      
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => editRecord(btn.dataset.id));
+      });
+      
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => confirmDeleteRecord(btn.dataset.id));
+      });
+      
+      // 更新分页和统计信息
+      updatePagination();
+      updateStatistics();
+      updateAnalysisChart();
+      updateCustomerFilter();
+      updateProductCategoryFilter();
+      updateDefectGroupFilter();
+      updatePartNumberFilterSuggestions();
+    }
+    
+    // 格式化日期
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('zh-CN');
+    }
+    
+    // 更新分页控制
+    function updatePagination() {
+      const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+      
+      // 更新分页信息
+      const startIndex = (currentPage - 1) * recordsPerPage + 1;
+      const endIndex = Math.min(currentPage * recordsPerPage, filteredRecords.length);
+      
+      currentPageRangeEl.textContent = startIndex;
+      lastPageRangeEl.textContent = endIndex;
+      totalItemsEl.textContent = filteredRecords.length;
+      
+      // 生成页码
+      pageNumbersEl.innerHTML = '';
+      
+      // 只显示当前页附近的页码
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, currentPage + 2);
+      
+      // 确保显示至少5个页码（除非总页数少于5）
+      if (endPage - startPage < 4 && totalPages >= 5) {
+        if (startPage === 1) {
+          endPage = 5;
+        } else if (endPage === totalPages) {
+          startPage = totalPages - 4;
+        }
+      }
+      
+      // 添加页码按钮
+      for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = `relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium ${i === currentPage ? 'z-10 bg-primary text-white border-primary' : 'text-gray-700 hover:bg-gray-50'}`;
+        pageBtn.textContent = i;
+        pageBtn.addEventListener('click', () => {
+          currentPage = i;
+          renderTable();
+        });
+        pageNumbersEl.appendChild(pageBtn);
+      }
+      
+      // 禁用/启用分页按钮
+      document.getElementById('firstPageBtn').disabled = currentPage === 1;
+      document.getElementById('prevPageBtn').disabled = currentPage === 1;
+      document.getElementById('prevPageBtnSm').disabled = currentPage === 1;
+      document.getElementById('lastPageBtn').disabled = currentPage === totalPages || totalPages === 0;
+      document.getElementById('nextPageBtn').disabled = currentPage === totalPages || totalPages === 0;
+      document.getElementById('nextPageBtnSm').disabled = currentPage === totalPages || totalPages === 0;
+      
+      // 添加样式到禁用按钮
+      if (currentPage === 1) {
+        document.getElementById('firstPageBtn').classList.add('opacity-50', 'cursor-not-allowed');
+        document.getElementById('prevPageBtn').classList.add('opacity-50', 'cursor-not-allowed');
+        document.getElementById('prevPageBtnSm').classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        document.getElementById('firstPageBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+        document.getElementById('prevPageBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+        document.getElementById('prevPageBtnSm').classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+      
+      if (currentPage === totalPages || totalPages === 0) {
+        document.getElementById('lastPageBtn').classList.add('opacity-50', 'cursor-not-allowed');
+        document.getElementById('nextPageBtn').classList.add('opacity-50', 'cursor-not-allowed');
+        document.getElementById('nextPageBtnSm').classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        document.getElementById('lastPageBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+        document.getElementById('nextPageBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+        document.getElementById('nextPageBtnSm').classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+    
+    // 更新统计信息
+    function updateStatistics() {
+      // 总记录数
+      totalRecordsEl.textContent = filteredRecords.length;
+      
+      // 总不良数
+      let totalDefects = 0;
+      filteredRecords.forEach(record => {
+        totalDefects += calculateTotalDefects(record);
+      });
+      totalDefectsEl.textContent = totalDefects;
+      
+      // 总订单量
+      let totalOrders = 0;
+      filteredRecords.forEach(record => {
+        totalOrders += record.orderQuantity || 0;
+      });
+      totalOrdersEl.textContent = totalOrders;
+      
+      // 平均PPM
+      let totalPpm = 0;
+      filteredRecords.forEach(record => {
+        totalPpm += calculateDailyPpm(record);
+      });
+      const averagePpm = filteredRecords.length > 0 ? Math.round(totalPpm / filteredRecords.length) : 0;
+      averagePpmEl.textContent = averagePpm;
+      
+      // 为平均PPM添加颜色指示（是否超过目标值）
+      if (averagePpm > TARGET_PPM) {
+        averagePpmEl.classList.add('text-danger');
+        averagePpmEl.classList.remove('text-warning', 'text-success');
+      } else if (averagePpm > 0) {
+        averagePpmEl.classList.add('text-warning');
+        averagePpmEl.classList.remove('text-danger', 'text-success');
+      } else {
+        averagePpmEl.classList.add('text-success');
+        averagePpmEl.classList.remove('text-danger', 'text-warning');
+      }
+    }
+    
+    // 初始化分析图表
+    function initAnalysisChart() {
+      const ctx = document.getElementById('analysisChart').getContext('2d');
+      
+      analysisChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [{
+            label: '不良数量',
+            data: [],
+            backgroundColor: 'rgba(22, 93, 255, 0.7)',
+            borderColor: 'rgba(22, 93, 255, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: '不良数量'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: '分析维度'
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.dataset.label || '';
+                  const value = context.raw || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                  return `${label}: ${value} (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      updateAnalysisChart();
+    }
+    
+    // 更新分析图表
+    function updateAnalysisChart() {
+      if (!analysisChart) return;
+      
+      const analysisDimension = document.getElementById('analysisDimension').value;
+      const chartType = document.getElementById('chartType').value;
+      
+      // 更改图表类型
+      analysisChart.config.type = chartType;
+      
+      let data = {};
+      let labels = [];
+      let datasetData = [];
+      
+      if (analysisDimension === 'defect') {
+        // 按不良项目统计
+        defectItems.forEach(item => {
+          data[item.name] = 0;
+        });
+        
+        filteredRecords.forEach(record => {
+          defectItems.forEach(item => {
+            data[item.name] += record[item.id] || 0;
+          });
+        });
+        
+        // 转换为数组并按数量排序
+        const defectArray = Object.keys(data)
+          .map(key => ({ name: key, total: data[key] }))
+          .filter(item => item.total > 0)
+          .sort((a, b) => b.total - a.total);
+        
+        labels = defectArray.map(item => item.name);
+        datasetData = defectArray.map(item => item.total);
+      } else if (analysisDimension === 'product') {
+        // 按产品别统计
+        filteredRecords.forEach(record => {
+          if (!data[record.productCategory]) {
+            data[record.productCategory] = 0;
+          }
+          data[record.productCategory] += calculateTotalDefects(record);
+        });
+        
+        // 转换为数组并按数量排序
+        const productArray = Object.keys(data)
+          .map(key => ({ name: key, total: data[key] }))
+          .filter(item => item.total > 0)
+          .sort((a, b) => b.total - a.total);
+        
+        labels = productArray.map(item => item.name);
+        datasetData = productArray.map(item => item.total);
+      } else if (analysisDimension === 'customer') {
+        // 按客户别统计
+        filteredRecords.forEach(record => {
+          if (!data[record.customerName]) {
+            data[record.customerName] = 0;
+          }
+          data[record.customerName] += calculateTotalDefects(record);
+        });
+        
+        // 转换为数组并按数量排序
+        const customerArray = Object.keys(data)
+          .map(key => ({ name: key, total: data[key] }))
+          .filter(item => item.total > 0)
+          .sort((a, b) => b.total - a.total);
+        
+        labels = customerArray.map(item => item.name);
+        datasetData = customerArray.map(item => item.total);
+      }
+      
+      // 更新图表数据
+      analysisChart.data.labels = labels;
+      analysisChart.data.datasets[0].data = datasetData;
+      
+      // 为饼图添加背景色
+      if (chartType === 'pie') {
+        const backgroundColors = [
+          'rgba(22, 93, 255, 0.7)',
+          'rgba(54, 207, 201, 0.7)',
+          'rgba(245, 63, 63, 0.7)',
+          'rgba(255, 125, 0, 0.7)',
+          'rgba(0, 180, 42, 0.7)',
+          'rgba(134, 144, 156, 0.7)',
+          'rgba(242, 243, 245, 0.7)',
+          'rgba(29, 33, 41, 0.7)'
+        ];
+        analysisChart.data.datasets[0].backgroundColor = backgroundColors.slice(0, labels.length);
+      } else {
+        analysisChart.data.datasets[0].backgroundColor = 'rgba(22, 93, 255, 0.7)';
+      }
+      
+      analysisChart.update();
+    }
+    
+    // 更新客户筛选器选项
+    function updateCustomerFilter() {
+      // 获取所有唯一客户名称
+      const customers = [...new Set(records.map(record => record.customerName))];
+      
+      // 保存当前选中值
+      const currentValue = customerFilterEl.value;
+      
+      // 清除现有选项（保留"全部客户"）
+      while (customerFilterEl.options.length > 1) {
+        customerFilterEl.remove(1);
+      }
+      
+      // 添加客户选项
+      customers.forEach(customer => {
+        const option = document.createElement('option');
+        option.value = customer;
+        option.textContent = customer;
+        customerFilterEl.appendChild(option);
+      });
+      
+      // 恢复选中值
+      if (currentValue) {
+        customerFilterEl.value = currentValue;
+      }
+    }
+    
+    // 更新产品别筛选器选项
+    function updateProductCategoryFilter() {
+      // 获取所有唯一产品别
+      const productCategories = [...new Set(records.map(record => record.productCategory))];
+      
+      // 保存当前选中值
+      const currentValue = productCategoryFilterEl.value;
+      
+      // 清除现有选项（保留"全部产品别"）
+      while (productCategoryFilterEl.options.length > 1) {
+        productCategoryFilterEl.remove(1);
+      }
+      
+      // 添加产品别选项
+      productCategories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        productCategoryFilterEl.appendChild(option);
+      });
+      
+      // 恢复选中值
+      if (currentValue) {
+        productCategoryFilterEl.value = currentValue;
+      }
+    }
+    
+    // 更新不良组别筛选器选项
+    function updateDefectGroupFilter() {
+      // 获取所有唯一不良组别
+      const defectGroups = [...new Set(records.map(record => record.defectGroup))];
+      
+      // 保存当前选中值
+      const currentValue = defectGroupFilterEl.value;
+      
+      // 清除现有选项（保留"全部不良组别"）
+      while (defectGroupFilterEl.options.length > 1) {
+        defectGroupFilterEl.remove(1);
+      }
+      
+      // 添加不良组别选项
+      defectGroups.forEach(group => {
+        const option = document.createElement('option');
+        option.value = group;
+        option.textContent = group;
+        defectGroupFilterEl.appendChild(option);
+      });
+      
+      // 恢复选中值
+      if (currentValue) {
+        defectGroupFilterEl.value = currentValue;
+      }
+    }
+    
+    // 更新Part Number筛选器建议
+    function updatePartNumberFilterSuggestions() {
+      // 获取所有唯一的Part Number
+      const partNumbers = [...new Set(records.map(record => record.partNumber))];
+      
+      // 创建数据列表用于自动完成
+      let datalist = document.getElementById('partNumberDatalist');
+      if (!datalist) {
+        datalist = document.createElement('datalist');
+        datalist.id = 'partNumberDatalist';
+        document.body.appendChild(datalist);
+        partNumberFilterEl.setAttribute('list', 'partNumberDatalist');
+      }
+      
+      // 清空现有选项
+      datalist.innerHTML = '';
+      
+      // 添加Part Number选项
+      partNumbers.forEach(partNumber => {
+        const option = document.createElement('option');
+        option.value = partNumber;
+        datalist.appendChild(option);
+      });
+    }
+    
+    // 应用筛选器
+    function applyFilters() {
+      const customer = document.getElementById('customerFilter').value;
+      const startDate = document.getElementById('startDateFilter').value;
+      const endDate = document.getElementById('endDateFilter').value;
+      const partNumber = document.getElementById('partNumberFilter').value.trim().toLowerCase();
+      const productCategory = document.getElementById('productCategoryFilter').value;
+      const defectGroup = document.getElementById('defectGroupFilter').value;
+      const defectType = document.getElementById('defectFilter').value;
+      
+      // 重置当前页
+      currentPage = 1;
+      
+      // 应用筛选
+      filteredRecords = records.filter(record => {
+        // 客户筛选
+        if (customer && record.customerName !== customer) {
+          return false;
+        }
+        
+        // 日期范围筛选
+        if (startDate && new Date(record.date) < new Date(startDate)) {
+          return false;
+        }
+        if (endDate && new Date(record.date) > new Date(endDate)) {
+          return false;
+        }
+        
+        // Part Number筛选 - 精确匹配或包含
+        if (partNumber && !record.partNumber.toLowerCase().includes(partNumber)) {
+          return false;
+        }
+        
+        // 产品别筛选
+        if (productCategory && record.productCategory !== productCategory) {
+          return false;
+        }
+        
+        // 不良组别筛选
+        if (defectGroup && record.defectGroup !== defectGroup) {
+          return false;
+        }
+        
+        // 不良项目筛选
+        if (defectType) {
+          const defectItem = defectItems.find(item => item.name === defectType);
+          if (defectItem && (!record[defectItem.id] || record[defectItem.id] === 0)) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+      
+      // 重新渲染表格
+      renderTable();
+    }
+    
+    // 重置筛选器
+    function resetFilters() {
+      document.getElementById('customerFilter').value = '';
+      document.getElementById('startDateFilter').value = '';
+      document.getElementById('endDateFilter').value = '';
+      document.getElementById('partNumberFilter').value = '';
+      document.getElementById('productCategoryFilter').value = '';
+      document.getElementById('defectGroupFilter').value = '';
+      document.getElementById('defectFilter').value = '';
+      
+      applyFilters();
+    }
+    
+    // 打开新增记录模态框
+    function openAddRecordModal() {
+      document.getElementById('modalTitle').textContent = '新增记录';
+      document.getElementById('recordId').value = '';
+      document.getElementById('recordForm').reset();
+      
+      // 设置默认日期为今天
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('date').value = today;
+      
+      // 打开模态框
+      document.getElementById('recordModal').classList.remove('hidden');
+    }
+    
+    // 编辑记录
+    function editRecord(id) {
+      const record = records.find(r => r.id === id);
+      if (!record) return;
+      
+      document.getElementById('modalTitle').textContent = '编辑记录';
+      document.getElementById('recordId').value = record.id;
+      document.getElementById('date').value = record.date;
+      document.getElementById('orderNumber').value = record.orderNumber;
+      document.getElementById('customerName').value = record.customerName;
+      document.getElementById('productName').value = record.productName;
+      document.getElementById('partNumber').value = record.partNumber;
+      document.getElementById('productCategory').value = record.productCategory;
+      document.getElementById('defectGroup').value = record.defectGroup;
+      document.getElementById('orderQuantity').value = record.orderQuantity;
+      
+      // 填充不良项目数据
+      defectItems.forEach(item => {
+        const input = document.getElementById(item.id);
+        if (input) {
+          input.value = record[item.id] || 0;
+        }
+      });
+      
+      // 打开模态框
+      document.getElementById('recordModal').classList.remove('hidden');
+    }
+    
+    // 查看记录
+    function viewRecord(id) {
+      const record = records.find(r => r.id === id);
+      if (!record) return;
+      
+      // 计算总不良数和PPM
+      const totalDefects = calculateTotalDefects(record);
+      const dailyPpm = calculateDailyPpm(record);
+      const isOverTarget = dailyPpm > TARGET_PPM;
+      
+      // 构建查看内容
+      let content = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <p class="text-sm text-gray-500">日期</p>
+            <p class="font-medium">${formatDate(record.date)}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">订单号</p>
+            <p class="font-medium">${record.orderNumber}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">客户名称</p>
+            <p class="font-medium">${record.customerName}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">产品名称</p>
+            <p class="font-medium">${record.productName}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Part Number</p>
+            <p class="font-medium">${record.partNumber}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">产品别</p>
+            <p class="font-medium">${record.productCategory}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">不良组别</p>
+            <p class="font-medium">${record.defectGroup}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">订单数量</p>
+            <p class="font-medium">${record.orderQuantity}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">总不良数</p>
+            <p class="font-medium ${totalDefects > 0 ? 'text-danger' : ''}">${totalDefects}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">当天不良PPM</p>
+            <p class="font-medium ${isOverTarget ? 'text-danger' : dailyPpm > 0 ? 'text-warning' : ''}">${dailyPpm}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">目标PPM</p>
+            <p class="font-medium text-primary">${TARGET_PPM}</p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">状态</p>
+            <p class="font-medium ${isOverTarget ? 'text-danger' : 'text-success'}">${isOverTarget ? '超出目标' : '符合目标'}</p>
+          </div>
+        </div>
+        
+        <h4 class="text-base font-medium text-gray-700 mb-4">不良项目数量</h4>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      `;
+      
+      // 添加不良项目
+      defectItems.forEach(item => {
+        const count = record[item.id] || 0;
+        content += `
+          <div>
+            <p class="text-sm text-gray-500">${item.name}</p>
+            <p class="font-medium ${count > 0 ? 'text-danger' : ''}">${count}</p>
+          </div>
+        `;
+      });
+      
+      content += `</div>`;
+      
+      // 更新查看模态框内容
+      document.getElementById('viewRecordContent').innerHTML = content;
+      
+      // 打开模态框
+      document.getElementById('viewRecordModal').classList.remove('hidden');
+    }
+    
+    // 保存记录
+    function saveRecord(event) {
+      event.preventDefault();
+      
+      const id = document.getElementById('recordId').value;
+      const isNew = !id;
+      
+      // 收集表单数据
+      const recordData = {
+        date: document.getElementById('date').value,
+        orderNumber: document.getElementById('orderNumber').value,
+        customerName: document.getElementById('customerName').value,
+        productName: document.getElementById('productName').value,
+        partNumber: document.getElementById('partNumber').value,
+        productCategory: document.getElementById('productCategory').value,
+        defectGroup: document.getElementById('defectGroup').value,
+        orderQuantity: parseInt(document.getElementById('orderQuantity').value)
+      };
+      
+      // 收集不良项目数据
+      defectItems.forEach(item => {
+        const input = document.getElementById(item.id);
+        if (input) {
+          recordData[item.id] = parseInt(input.value) || 0;
+        }
+      });
+      
+      if (isNew) {
+        // 新增记录
+        recordData.id = generateId();
+        records.push(recordData);
+        showNotification('新增成功', '记录已成功添加', 'success');
+      } else {
+        // 更新现有记录
+        const index = records.findIndex(r => r.id === id);
+        if (index !== -1) {
+          recordData.id = id; // 保留ID
+          records[index] = recordData;
+          showNotification('更新成功', '记录已成功更新', 'success');
+        }
+      }
+      
+      // 保存数据并重新渲染
+      saveRecords();
+      applyFilters();
+      
+      // 关闭模态框
+      document.getElementById('recordModal').classList.add('hidden');
+    }
+    
+    // 确认删除记录
+    function confirmDeleteRecord(id) {
+      selectedRecordId = id;
+      const record = records.find(r => r.id === id);
+      
+      if (record) {
+        document.getElementById('deleteConfirmMessage').textContent = 
+          `您确定要删除Part Number为 "${record.partNumber}" 的记录吗？此操作无法撤销。`;
+      } else {
+        document.getElementById('deleteConfirmMessage').textContent = 
+          `您确定要删除这条记录吗？此操作无法撤销。`;
+      }
+      
+      // 打开确认模态框
+      document.getElementById('confirmDeleteModal').classList.remove('hidden');
+    }
+    
+    // 确认删除所有记录
+    function confirmDeleteAllRecords() {
+      selectedRecordId = null;
+      document.getElementById('deleteConfirmMessage').textContent = 
+        `您确定要删除所有记录吗？此操作无法撤销，将会删除所有 ${records.length} 条记录。`;
+      
+      // 打开确认模态框
+      document.getElementById('confirmDeleteModal').classList.remove('hidden');
+    }
+    
+    // 执行删除
+    function deleteRecord() {
+      if (selectedRecordId) {
+        // 删除单条记录
+        const initialLength = records.length;
+        records = records.filter(r => r.id !== selectedRecordId);
+        
+        if (records.length < initialLength) {
+          showNotification('删除成功', '记录已成功删除', 'success');
+        }
+      } else {
+        // 删除所有记录
+        if (records.length > 0) {
+          records = [];
+          showNotification('删除成功', '所有记录已成功删除', 'success');
+        }
+      }
+      
+      // 保存数据并重新渲染
+      saveRecords();
+      applyFilters();
+      
+      // 关闭确认模态框
+      document.getElementById('confirmDeleteModal').classList.add('hidden');
+    }
+    
+    // 导出数据
+    function exportData() {
+      const dataStr = JSON.stringify(filteredRecords, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `外观检查不良记录_${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      showNotification('导出成功', '数据已成功导出为JSON文件', 'success');
+    }
+    
+    // 导入数据
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          
+          // 验证导入的数据格式
+          if (Array.isArray(importedData) && importedData.every(item => 
+            item.hasOwnProperty('date') && 
+            item.hasOwnProperty('orderNumber') &&
+            item.hasOwnProperty('customerName') &&
+            item.hasOwnProperty('productName') &&
+            item.hasOwnProperty('partNumber') &&
+            item.hasOwnProperty('orderQuantity')
+          )) {
+            // 为导入的记录添加唯一ID
+            importedData.forEach(item => {
+              if (!item.id) {
+                item.id = generateId();
+              }
+              // 确保导入的数据包含新增的字段
+              if (!item.productCategory) {
+                item.productCategory = '未分类';
+              }
+              if (!item.defectGroup) {
+                item.defectGroup = '未分类';
+              }
+            });
+            
+            // 合并数据
+            records = [...records, ...importedData];
+            saveRecords();
+            applyFilters();
+            
+            showNotification('导入成功', `已成功导入 ${importedData.length} 条记录`, 'success');
+          } else {
+            showNotification('导入失败', '导入的数据格式不正确', 'error');
+          }
+        } catch (error) {
+          showNotification('导入失败', 'JSON格式错误，请检查文件', 'error');
+          console.error('导入数据错误:', error);
+        }
+      };
+      reader.readAsText(file);
+      
+      // 重置文件输入
+      document.getElementById('importFileInput').value = '';
+    }
+    
+    // 打印功能
+    function printRecords() {
+      const printWindow = window.open('', '_blank');
+      
+      // 构建打印内容
+      let printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>外观检查不良记录 - 打印</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; }
+            h1 { text-align: center; color: #165DFF; margin: 20px 0; }
+            .print-date { text-align: right; color: #666; margin-bottom: 20px; }
+            .target-ppm { color: #165DFF; font-weight: bold; text-align: center; margin: 10px 0 20px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; font-size: 12px; }
+            th { background-color: #f2f2f2; font-weight: bold; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            .summary { margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; }
+            .summary p { margin: 5px 0; }
+            .over-target { color: #F53F3F; font-weight: bold; }
+            .warning { color: #FF7D00; font-weight: medium; }
+          </style>
+        </head>
+        <body>
+          <h1>外观检查不良记录</h1>
+          <p class="print-date">打印日期: ${new Date().toLocaleString()}</p>
+          <p class="target-ppm">目标PPM值: ${TARGET_PPM}</p>
+          
+          <div class="summary">
+            <p><strong>总记录数:</strong> ${filteredRecords.length}</p>
+            <p><strong>总不良数:</strong> ${totalDefectsEl.textContent}</p>
+            <p><strong>总订单量:</strong> ${totalOrdersEl.textContent}</p>
+            <p><strong>平均PPM:</strong> ${averagePpmEl.textContent}</p>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>序号</th>
+                <th>日期</th>
+                <th>订单号</th>
+                <th>客户名称</th>
+                <th>产品名称</th>
+                <th>Part Number</th>
+                <th>产品别</th>
+                <th>不良组别</th>
+                <th>订单数量</th>
+      `;
+      
+      // 添加不良项目表头
+      defectItems.forEach(item => {
+        printContent += `<th>${item.name}</th>`;
+      });
+      
+      // 继续构建表格
+      printContent += `
+                <th>当天不良PPM</th>
+                <th>目标PPM</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      // 添加记录行
+      filteredRecords.forEach((record, index) => {
+        const totalDefects = calculateTotalDefects(record);
+        const dailyPpm = calculateDailyPpm(record);
+        const isOverTarget = dailyPpm > TARGET_PPM;
+        
+        printContent += `<tr>`;
+        printContent += `<td>${index + 1}</td>`;
+        printContent += `<td>${formatDate(record.date)}</td>`;
+        printContent += `<td>${record.orderNumber}</td>`;
+        printContent += `<td>${record.customerName}</td>`;
+        printContent += `<td>${record.productName}</td>`;
+        printContent += `<td>${record.partNumber}</td>`;
+        printContent += `<td>${record.productCategory}</td>`;
+        printContent += `<td>${record.defectGroup}</td>`;
+        printContent += `<td>${record.orderQuantity}</td>`;
+        
+        // 添加不良项目数据
+        defectItems.forEach(item => {
+          const count = record[item.id] || 0;
+          printContent += `<td${count > 0 ? ' style="color: #F53F3F; font-weight: bold;"' : ''}>${count}</td>`;
+        });
+        
+        const ppmClass = isOverTarget ? 'over-target' : (dailyPpm > 0 ? 'warning' : '');
+        printContent += `<td class="${ppmClass}">${dailyPpm}</td>`;
+        printContent += `<td style="color: #165DFF; font-weight: bold;">${TARGET_PPM}</td>`;
+        printContent += `</tr>`;
+      });
+      
+      // 完成HTML
+      printContent += `
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
+      
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+    
+    // 显示通知
+    function showNotification(title, message, type = 'success') {
+      const notificationEl = document.getElementById('notification');
+      const titleEl = document.getElementById('notificationTitle');
+      const messageEl = document.getElementById('notificationMessage');
+      const iconEl = document.getElementById('notificationIcon');
+      
+      // 设置通知内容
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      
+      // 设置通知类型样式
+      iconEl.className = '';
+      if (type === 'success') {
+        iconEl.className = 'mr-3 mt-0.5 text-success';
+        iconEl.innerHTML = '<i class="fa fa-check-circle text-xl"></i>';
+      } else if (type === 'error') {
+        iconEl.className = 'mr-3 mt-0.5 text-danger';
+        iconEl.innerHTML = '<i class="fa fa-exclamation-circle text-xl"></i>';
+      } else if (type === 'warning') {
+        iconEl.className = 'mr-3 mt-0.5 text-warning';
+        iconEl.innerHTML = '<i class="fa fa-exclamation-triangle text-xl"></i>';
+      } else if (type === 'info') {
+        iconEl.className = 'mr-3 mt-0.5 text-primary';
+        iconEl.innerHTML = '<i class="fa fa-info-circle text-xl"></i>';
+      }
+      
+      // 显示通知
+      notificationEl.classList.remove('translate-y-20', 'opacity-0');
+      notificationEl.classList.add('translate-y-0', 'opacity-100');
+      
+      // 3秒后自动关闭
+      setTimeout(() => {
+        hideNotification();
+      }, 3000);
+    }
+    
+    // 隐藏通知
+    function hideNotification() {
+      const notificationEl = document.getElementById('notification');
+      notificationEl.classList.remove('translate-y-0', 'opacity-100');
+      notificationEl.classList.add('translate-y-20', 'opacity-0');
+    }
+    
+    // 添加事件监听器
+    function addEventListeners() {
+      // 分页控制
+      document.getElementById('firstPageBtn').addEventListener('click', () => {
+        currentPage = 1;
+        renderTable();
+      });
+      
+      document.getElementById('prevPageBtn').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
+        }
+      });
+      
+      document.getElementById('prevPageBtnSm').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
+        }
+      });
+      
+      document.getElementById('nextPageBtn').addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable();
+        }
+      });
+      
+      document.getElementById('nextPageBtnSm').addEventListener('click', () => {
+        const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable();
+        }
+      });
+      
+      document.getElementById('lastPageBtn').addEventListener('click', () => {
+        currentPage = Math.ceil(filteredRecords.length / recordsPerPage);
+        renderTable();
+      });
+      
+      // 筛选器
+      document.getElementById('applyFilterBtn').addEventListener('click', applyFilters);
+      document.getElementById('resetFilterBtn').addEventListener('click', resetFilters);
+      
+      // Part Number筛选增强 - 支持回车直接筛选
+      partNumberFilterEl.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+          applyFilters();
+        }
+      });
+      
+      // 分析维度选择
+      document.getElementById('analysisDimension').addEventListener('change', updateAnalysisChart);
+      document.getElementById('chartType').addEventListener('change', updateAnalysisChart);
+      
+      // 模态框控制
+      document.getElementById('addNewBtn').addEventListener('click', openAddRecordModal);
+      document.getElementById('closeModalBtn').addEventListener('click', () => {
+        document.getElementById('recordModal').classList.add('hidden');
+      });
+      
+      document.getElementById('cancelFormBtn').addEventListener('click', () => {
+        document.getElementById('recordModal').classList.add('hidden');
+      });
+      
+      document.getElementById('closeViewModalBtn').addEventListener('click', () => {
+        document.getElementById('viewRecordModal').classList.add('hidden');
+      });
+      
+      document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
+        document.getElementById('confirmDeleteModal').classList.add('hidden');
+      });
+      
+      document.getElementById('confirmDeleteBtn').addEventListener('click', deleteRecord);
+      
+      // 表单提交
+      document.getElementById('recordForm').addEventListener('submit', saveRecord);
+      
+      // 数据管理
+      document.getElementById('deleteAllBtn').addEventListener('click', confirmDeleteAllRecords);
+      document.getElementById('exportBtn').addEventListener('click', exportData);
+      document.getElementById('importBtn').addEventListener('click', () => {
+        document.getElementById('importFileInput').click();
+      });
+      
+      document.getElementById('importFileInput').addEventListener('change', importData);
+      
+      // 打印功能
+      document.getElementById('printBtn').addEventListener('click', printRecords);
+      
+      // 通知关闭
+      document.getElementById('closeNotificationBtn').addEventListener('click', hideNotification);
+      
+      // 点击模态框外部关闭
+      document.getElementById('recordModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('recordModal')) {
+          document.getElementById('recordModal').classList.add('hidden');
+        }
+      });
+      
+      document.getElementById('viewRecordModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('viewRecordModal')) {
+          document.getElementById('viewRecordModal').classList.add('hidden');
+        }
+      });
+      
+      document.getElementById('confirmDeleteModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('confirmDeleteModal')) {
+          document.getElementById('confirmDeleteModal').classList.add('hidden');
+        }
+      });
+    }
+  </script>
+</body>
+</html>
